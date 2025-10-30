@@ -1,0 +1,1710 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Primary Meta Tags -->
+    <title>Git 완전 가이드 - 내부 동작 원리부터 이해하기 | Git Deep Dive Tutorial</title>
+    <meta name="title" content="Git 완전 가이드 - 내부 동작 원리부터 이해하기">
+    <meta name="description" content="Git의 내부 동작 원리를 완전히 이해하는 종합 가이드. 브랜치, 커밋, HEAD, 객체 모델, 스냅샷 저장 방식 등 Git의 마법을 쉬운 비유로 설명합니다. 초보자부터 전문가까지 모두를 위한 Git 학습 자료.">
+    <meta name="keywords" content="Git 가이드, Git 튜토리얼, Git 원리, Git 내부 구조, Git 객체 모델, Git 브랜치, Git 커밋, Git HEAD, Git 학습, 버전 관리, Git 한글, Git Korean, Git 강의, Git 설명, Git 이해하기">
+    <meta name="author" content="dkkwon0228">
+    <meta name="robots" content="index, follow">
+    <meta name="language" content="Korean">
+    <meta name="revisit-after" content="7 days">
+    <meta name="date" content="2025-10-31">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://github.com/dkkwon0228/life-management/blob/main/docs/07-guides/git-deep-dive-guide.html">
+    <meta property="og:title" content="Git 완전 가이드 - 내부 동작 원리부터 이해하기">
+    <meta property="og:description" content="Git의 내부 동작 원리를 완전히 이해하는 종합 가이드. 브랜치, 커밋, HEAD, 객체 모델을 쉬운 비유로 설명합니다.">
+    <meta property="og:locale" content="ko_KR">
+    <meta property="og:site_name" content="Git Deep Dive Guide">
+    <meta property="article:published_time" content="2025-10-31T00:00:00+09:00">
+    <meta property="article:modified_time" content="2025-10-31T00:00:00+09:00">
+    <meta property="article:author" content="dkkwon0228">
+    <meta property="article:section" content="Programming">
+    <meta property="article:tag" content="Git">
+    <meta property="article:tag" content="Version Control">
+    <meta property="article:tag" content="Tutorial">
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="https://github.com/dkkwon0228/life-management/blob/main/docs/07-guides/git-deep-dive-guide.html">
+    <meta name="twitter:title" content="Git 완전 가이드 - 내부 동작 원리부터 이해하기">
+    <meta name="twitter:description" content="Git의 내부 동작 원리를 완전히 이해하는 종합 가이드. 브랜치, 커밋, HEAD, 객체 모델을 쉬운 비유로 설명합니다.">
+
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://github.com/dkkwon0228/life-management/blob/main/docs/07-guides/git-deep-dive-guide.html">
+
+    <!-- DNS Prefetch & Preconnect for Performance -->
+    <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+
+    <!-- Additional SEO -->
+    <meta name="theme-color" content="#3498db">
+    <meta name="format-detection" content="telephone=no">
+
+    <!-- Structured Data (JSON-LD) -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "TechArticle",
+        "headline": "Git 완전 가이드 - 내부 동작 원리부터 이해하기",
+        "description": "Git의 내부 동작 원리를 완전히 이해하는 종합 가이드. 브랜치, 커밋, HEAD, 객체 모델, 스냅샷 저장 방식 등 Git의 마법을 쉬운 비유로 설명합니다.",
+        "image": "https://git-scm.com/images/logos/downloads/Git-Icon-1788C.png",
+        "author": {
+            "@type": "Person",
+            "name": "dkkwon0228",
+            "url": "https://github.com/dkkwon0228"
+        },
+        "datePublished": "2025-10-31",
+        "dateModified": "2025-10-31",
+        "publisher": {
+            "@type": "Organization",
+            "name": "Life Management System",
+            "logo": {
+                "@type": "ImageObject",
+                "url": "https://git-scm.com/images/logos/downloads/Git-Icon-1788C.png"
+            }
+        },
+        "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": "https://github.com/dkkwon0228/life-management/blob/main/docs/07-guides/git-deep-dive-guide.html"
+        },
+        "inLanguage": "ko",
+        "proficiencyLevel": "Beginner to Expert",
+        "keywords": ["Git", "Version Control", "Git Tutorial", "Git 브랜치", "Git 커밋", "Git 내부 구조", "Git 객체 모델"],
+        "articleSection": "Programming Tutorial",
+        "articleBody": "Git 완전 가이드 - 브랜치, 커밋, HEAD, Repository, Working Directory, Staging Area, 객체 모델, 단방향 참조, 스냅샷 저장 방식, 원격 저장소 등 Git의 핵심 개념을 쉬운 비유와 다이어그램으로 설명합니다.",
+        "educationalLevel": "All levels",
+        "teaches": [
+            "Git 핵심 용어 정의",
+            "Git의 3가지 영역 (Working Directory, Staging Area, Repository)",
+            "커밋과 체크아웃의 정확한 의미",
+            "Git 내부 구조 (.git 디렉토리)",
+            "Git 객체 모델 (Commit, Tree, Blob)",
+            "브랜치 시스템의 원리",
+            "단방향 참조 구조",
+            "스냅샷 저장 방식과 중복 제거",
+            "원격 저장소 (origin, fetch, pull)",
+            "해시와 저장 메커니즘 (SHA-1)"
+        ],
+        "about": {
+            "@type": "Thing",
+            "name": "Git Version Control System",
+            "description": "분산 버전 관리 시스템"
+        }
+    }
+    </script>
+
+    <!-- Breadcrumb Structured Data -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+            {
+                "@type": "ListItem",
+                "position": 1,
+                "name": "Home",
+                "item": "https://github.com/dkkwon0228/life-management"
+            },
+            {
+                "@type": "ListItem",
+                "position": 2,
+                "name": "Guides",
+                "item": "https://github.com/dkkwon0228/life-management/tree/main/docs/07-guides"
+            },
+            {
+                "@type": "ListItem",
+                "position": 3,
+                "name": "Git 완전 가이드",
+                "item": "https://github.com/dkkwon0228/life-management/blob/main/docs/07-guides/git-deep-dive-guide.html"
+            }
+        ]
+    }
+    </script>
+
+    <!-- FAQ Structured Data -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "mainEntity": [
+            {
+                "@type": "Question",
+                "name": "Git 브랜치를 생성하면 커밋이 복사되나요?",
+                "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "아니요. 브랜치는 단순히 41바이트 크기의 텍스트 파일입니다. 커밋을 복사하지 않고, 같은 커밋을 가리키는 포인터일 뿐입니다. 따라서 브랜치 생성은 매우 가볍고 빠른 작업입니다."
+                }
+            },
+            {
+                "@type": "Question",
+                "name": "HEAD는 항상 최신 커밋을 가리키나요?",
+                "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "아니요. HEAD는 '현재 체크아웃된 커밋'을 가리킵니다. git checkout 명령으로 과거 커밋으로 이동하면 HEAD도 과거 커밋을 가리키게 됩니다. HEAD는 '지금 어디에 있는가'를 나타내는 포인터입니다."
+                }
+            },
+            {
+                "@type": "Question",
+                "name": "git fetch가 원격 저장소를 변경하나요?",
+                "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "아니요. git fetch는 읽기 전용 작업입니다. 원격 저장소의 내용을 로컬로 다운로드만 하고, 원격 저장소 자체는 전혀 변경하지 않습니다. 로컬의 origin/main 브랜치만 업데이트됩니다."
+                }
+            },
+            {
+                "@type": "Question",
+                "name": "Git은 파일의 해시값만 저장하나요?",
+                "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "아니요. Git은 파일 내용 전체를 .git/objects/ 디렉토리에 저장합니다. 해시는 파일명으로 사용되며, 실제 내용이 저장되어 있기 때문에 과거 버전을 완전히 복원할 수 있습니다."
+                }
+            },
+            {
+                "@type": "Question",
+                "name": "Git은 변경사항만 저장하나요 (델타 방식)?",
+                "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "아니요. Git은 각 커밋마다 프로젝트 전체의 스냅샷을 저장합니다. 하지만 중복 제거 메커니즘을 통해 변경되지 않은 파일은 재사용하므로, 실제 저장 공간은 효율적으로 관리됩니다."
+                }
+            },
+            {
+                "@type": "Question",
+                "name": "origin은 무엇인가요?",
+                "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "origin은 원격 저장소 URL의 기본 별칭(alias)입니다. 긴 URL(예: https://github.com/user/repo.git) 대신 짧은 이름으로 참조하기 위한 것입니다. 전화번호부에서 '엄마'라는 이름으로 전화번호를 저장하는 것과 같은 개념입니다."
+                }
+            },
+            {
+                "@type": "Question",
+                "name": "부모 커밋은 자식 커밋을 알 수 있나요?",
+                "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "아니요. Git은 단방향 참조 구조입니다. 자식 커밋은 부모 커밋의 해시를 저장하지만, 부모 커밋은 자식 커밋의 정보를 전혀 갖고 있지 않습니다. 이는 불변성을 보장하고 분산 시스템에서의 효율성을 위한 설계입니다."
+                }
+            }
+        ]
+    }
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --bg-code: #f5f5f5;
+            --text-primary: #2c3e50;
+            --text-secondary: #5a6c7d;
+            --accent: #3498db;
+            --accent-hover: #2980b9;
+            --border: #e1e4e8;
+            --shadow: rgba(0, 0, 0, 0.05);
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg-primary: #1a1a1a;
+                --bg-secondary: #252525;
+                --bg-code: #2d2d2d;
+                --text-primary: #e8e8e8;
+                --text-secondary: #b0b0b0;
+                --accent: #5dade2;
+                --accent-hover: #3498db;
+                --border: #3a3a3a;
+                --shadow: rgba(255, 255, 255, 0.05);
+            }
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.7;
+            color: var(--text-primary);
+            background-color: var(--bg-primary);
+            font-size: 16px;
+        }
+
+        .container {
+            display: flex;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            position: sticky;
+            top: 0;
+            width: 280px;
+            height: 100vh;
+            overflow-y: auto;
+            padding: 2rem 1.5rem;
+            background-color: var(--bg-secondary);
+            border-right: 1px solid var(--border);
+        }
+
+        .sidebar h2 {
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-secondary);
+            margin-bottom: 1.5rem;
+        }
+
+        .toc {
+            list-style: none;
+        }
+
+        .toc li {
+            margin-bottom: 0.5rem;
+        }
+
+        .toc a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: color 0.2s;
+            display: block;
+            padding: 0.3rem 0;
+        }
+
+        .toc a:hover {
+            color: var(--accent);
+        }
+
+        .toc a.active {
+            color: var(--accent);
+            font-weight: 500;
+        }
+
+        /* Main Content */
+        .main {
+            flex: 1;
+            padding: 3rem 4rem;
+            max-width: 900px;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+        }
+
+        h2 {
+            font-size: 2rem;
+            font-weight: 600;
+            margin-top: 3rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--border);
+        }
+
+        h3 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-top: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        h4 {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-top: 2rem;
+            margin-bottom: 0.8rem;
+        }
+
+        p {
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+        }
+
+        strong {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        em {
+            font-style: italic;
+            color: var(--text-secondary);
+        }
+
+        /* Code Blocks */
+        code {
+            font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, monospace;
+            font-size: 0.9em;
+            background-color: var(--bg-code);
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+        }
+
+        pre {
+            background-color: var(--bg-code);
+            padding: 1.5rem;
+            border-radius: 6px;
+            overflow-x: auto;
+            margin: 1.5rem 0;
+            border: 1px solid var(--border);
+        }
+
+        pre code {
+            background: none;
+            padding: 0;
+            font-size: 0.85rem;
+            line-height: 1.6;
+        }
+
+        /* Lists */
+        ul, ol {
+            margin: 1rem 0 1rem 2rem;
+        }
+
+        li {
+            margin-bottom: 0.5rem;
+        }
+
+        /* Tables */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 2rem 0;
+            font-size: 0.9rem;
+        }
+
+        th, td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        th {
+            font-weight: 600;
+            background-color: var(--bg-secondary);
+        }
+
+        /* Blockquotes */
+        blockquote {
+            border-left: 4px solid var(--accent);
+            padding-left: 1.5rem;
+            margin: 1.5rem 0;
+            color: var(--text-secondary);
+            font-style: italic;
+        }
+
+        /* Callout Boxes */
+        .callout {
+            padding: 1.5rem;
+            border-radius: 6px;
+            margin: 2rem 0;
+            background-color: var(--bg-secondary);
+            border-left: 4px solid var(--accent);
+        }
+
+        .callout-title {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--accent);
+        }
+
+        /* Diagrams */
+        .diagram {
+            margin: 2rem 0;
+            padding: 2rem;
+            background-color: var(--bg-secondary);
+            border-radius: 6px;
+            text-align: center;
+        }
+
+        .diagram-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        /* Comparison Box */
+        .comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin: 2rem 0;
+        }
+
+        .comparison-item {
+            padding: 1.5rem;
+            background-color: var(--bg-secondary);
+            border-radius: 6px;
+        }
+
+        .comparison-item h4 {
+            margin-top: 0;
+            color: var(--accent);
+        }
+
+        /* Checkmarks and X marks */
+        .check {
+            color: #27ae60;
+            font-weight: bold;
+        }
+
+        .cross {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+
+        /* Mobile */
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                position: static;
+                width: 100%;
+                height: auto;
+                border-right: none;
+                border-bottom: 1px solid var(--border);
+            }
+
+            .main {
+                padding: 2rem 1.5rem;
+            }
+
+            .comparison {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            h2 {
+                font-size: 1.5rem;
+            }
+        }
+
+        /* Smooth Scroll */
+        html {
+            scroll-behavior: smooth;
+        }
+
+        /* Links */
+        a {
+            color: var(--accent);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        a:hover {
+            color: var(--accent-hover);
+            text-decoration: underline;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 100%);
+            color: white;
+            padding: 3rem 0;
+            margin-bottom: 3rem;
+        }
+
+        .header h1 {
+            color: white;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 1.1rem;
+        }
+
+        /* Emoji icons */
+        .emoji {
+            font-style: normal;
+            font-size: 1.2em;
+        }
+    </style>
+</head>
+<body>
+    <header class="header" role="banner">
+        <div style="max-width: 900px; margin: 0 auto; padding: 0 2rem;">
+            <h1 itemprop="headline name">📚 Git 완전 가이드</h1>
+            <p itemprop="description">내부 동작 원리부터 이해하기 - 마법 같은 Git의 비밀을 풀다</p>
+        </div>
+    </header>
+
+    <div class="container">
+        <aside class="sidebar" role="navigation" aria-label="목차">
+            <h2>목차</h2>
+            <nav>
+                <ul class="toc" role="list">
+                <li><a href="#intro">개요</a></li>
+                <li><a href="#terms">핵심 용어 정의</a></li>
+                <li><a href="#areas">Git의 3가지 영역</a></li>
+                <li><a href="#basics">기본 개념</a></li>
+                <li><a href="#structure">Git 내부 구조</a></li>
+                <li><a href="#objects">Git 객체 모델</a></li>
+                <li><a href="#branches">브랜치 시스템</a></li>
+                <li><a href="#unidirectional">단방향 참조 구조</a></li>
+                <li><a href="#snapshots">스냅샷 저장 방식</a></li>
+                <li><a href="#remote">원격 저장소</a></li>
+                <li><a href="#hash">해시와 저장 메커니즘</a></li>
+                <li><a href="#examples">실전 예시</a></li>
+                <li><a href="#tips">고급 팁</a></li>
+                <li><a href="#myths">자주 하는 오해들</a></li>
+            </ul>
+            </nav>
+        </aside>
+
+        <main class="main" role="main">
+            <article itemscope itemtype="https://schema.org/TechArticle">
+            <section id="intro">
+                <h2>1. 개요</h2>
+
+                <h3>1.1 Git이란?</h3>
+                <p>Git은 <strong>분산 버전 관리 시스템(Distributed Version Control System)</strong>입니다. 프로젝트의 변경 이력을 추적하고, 여러 사람이 협업할 수 있도록 도와주는 도구입니다.</p>
+
+                <div class="callout">
+                    <div class="callout-title"><span class="emoji">📖</span> 일상 비유: 작문 노트</div>
+                    <pre>초등학생의 일기장:
+
+9월 1일: "오늘 학교에 갔다" (첫 번째 버전)
+9월 2일: "오늘 친구와 놀았다" (두 번째 버전)
+9월 3일: "오늘 숙제를 했다" (세 번째 버전)
+
+→ 과거 일기를 지우지 않고 계속 추가
+→ 언제든 과거 일기를 다시 읽을 수 있음
+→ Git도 마찬가지!</pre>
+                </div>
+
+                <h3>1.2 왜 Git을 깊이 이해해야 하는가?</h3>
+                <p>많은 개발자들이 Git 명령어만 외워서 사용합니다. 하지만 내부 동작 원리를 이해하면:</p>
+                <ul>
+                    <li>문제 발생 시 스스로 해결 가능</li>
+                    <li>복잡한 브랜치 전략 이해</li>
+                    <li>효율적인 협업 가능</li>
+                    <li>Git의 강력한 기능 100% 활용</li>
+                </ul>
+
+                <div class="callout">
+                    <div class="callout-title"><span class="emoji">🚗</span> 일상 비유: 운전</div>
+                    <div class="comparison">
+                        <div class="comparison-item">
+                            <h4>명령어만 외우기</h4>
+                            <p>내비게이션만 따라가기<br>→ 길을 잃으면 당황</p>
+                        </div>
+                        <div class="comparison-item">
+                            <h4>원리 이해하기</h4>
+                            <p>지도를 읽을 수 있기<br>→ 새로운 길도 스스로 찾을 수 있음</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="terms">
+                <h2>2. 핵심 용어 정의</h2>
+
+                <h3>2.1 Repository (저장소)</h3>
+                <p><strong>정의:</strong> Git이 프로젝트의 모든 버전을 저장하는 데이터베이스</p>
+
+                <div class="callout">
+                    <div class="callout-title"><span class="emoji">📚</span> 일상 비유: 도서관</div>
+                    <pre>도서관 = Repository
+- 모든 책(파일)의 모든 판본 보관
+- 초판, 재판, 3판... 모두 보관
+- 원하는 판본을 언제든 꺼내 볼 수 있음</pre>
+                </div>
+
+                <p><strong>물리적 위치:</strong> <code>.git/</code> 디렉토리</p>
+
+                <h3>2.2 Working Directory (작업 디렉토리)</h3>
+                <p><strong>정의:</strong> Git으로 관리하는 파일들이 있는 최상위 폴더. 실제로 파일을 편집하는 공간.</p>
+
+                <p><strong>동의어:</strong> Working Tree, Working Copy, 작업 폴더, 작업 공간</p>
+
+                <div class="callout">
+                    <div class="callout-title"><span class="emoji">💼</span> 일상 비유: 책상</div>
+                    <pre>도서관(Repository)에서 책을 빌려와서
+책상(Working Directory)에 펼쳐놓고 읽고 쓰기
+
+- 책상 = 실제 작업하는 공간
+- 도서관 = 모든 버전 보관하는 곳</pre>
+                </div>
+
+                <h3>2.3 Staging Area (Index)</h3>
+                <p><strong>정의:</strong> 다음 커밋에 포함될 변경사항을 준비하는 중간 영역</p>
+
+                <div class="callout">
+                    <div class="callout-title"><span class="emoji">🛒</span> 일상 비유: 쇼핑 카트</div>
+                    <pre>쇼핑:
+1. 매장(Working Directory)에서 물건 선택
+2. 카트(Staging Area)에 담기 ← git add
+3. 계산대에서 결제(Commit) ← git commit
+
+카트에 담은 것만 구매!
+마음에 안 들면 카트에서 빼기 가능!</pre>
+                </div>
+
+                <h3>2.4 HEAD</h3>
+                <p><strong>정의:</strong> 현재 체크아웃된 커밋(또는 브랜치)을 가리키는 포인터. "지금 어디에 있는가?"를 나타냄.</p>
+
+                <div class="callout">
+                    <div class="callout-title"><span class="emoji">👉</span> 일상 비유: 손가락으로 가리키기</div>
+                    <pre>책(커밋 히스토리):
+1장 ← 2장 ← 3장 ← 4장
+                   ↑
+               손가락 (HEAD)
+               "지금 4장을 읽는 중!"
+
+HEAD = "현재 읽고 있는 페이지"를 가리키는 손가락</pre>
+                </div>
+
+                <h3>2.5 Branch (브랜치)</h3>
+                <p><strong>정의:</strong> 커밋을 가리키는 가벼운 포인터. 단순한 41바이트 텍스트 파일.</p>
+
+                <div class="callout">
+                    <div class="callout-title"><span class="emoji">🔖</span> 일상 비유: 책갈피</div>
+                    <pre>책(커밋 히스토리):
+1장 ← 2장 ← 3장 ← 4장
+           ↑       ↑
+        책갈피A  책갈피B
+        (dev)   (main)
+
+브랜치 = 책갈피
+- 같은 페이지에 여러 책갈피 가능
+- 책갈피를 옮기기 쉬움
+- 책갈피는 가벼움 (스티커 한 장)</pre>
+                </div>
+
+                <h3>2.6 Commit (커밋)</h3>
+                <p><strong>정의:</strong> 특정 시점의 프로젝트 전체 스냅샷. 변경사항을 저장소에 기록하는 것.</p>
+
+                <div class="callout">
+                    <div class="callout-title"><span class="emoji">🎮</span> 일상 비유: 게임 세이브</div>
+                    <pre>게임 플레이:
+- 레벨 1 클리어 → 저장 (커밋 A)
+- 레벨 2 클리어 → 저장 (커밋 B)
+- 보스 직전 → 저장 (커밋 C)
+
+커밋 = 게임 저장
+- 현재 상태를 완벽히 기록
+- 언제든 그 시점으로 돌아갈 수 있음</pre>
+                </div>
+
+                <h3>2.7 Remote (원격 저장소)</h3>
+                <p><strong>정의:</strong> 네트워크 상의 다른 위치에 있는 Repository. 보통 GitHub, GitLab 등.</p>
+
+                <div class="callout">
+                    <div class="callout-title"><span class="emoji">☁️</span> 일상 비유: 구글 드라이브</div>
+                    <pre>내 컴퓨터 = Local Repository
+구글 드라이브 = Remote Repository
+
+- 내 컴퓨터에서 작업
+- 구글 드라이브에 백업
+- 다른 컴퓨터에서도 접근 가능</pre>
+                </div>
+
+                <h3>2.8 origin</h3>
+                <p><strong>정의:</strong> 원격 저장소의 기본 별칭(alias). URL의 짧은 이름.</p>
+
+                <div class="callout">
+                    <div class="callout-title"><span class="emoji">📞</span> 일상 비유: 전화번호부</div>
+                    <pre>전화번호부:
+"엄마" → 010-1234-5678
+"친구" → 010-9876-5432
+
+Git:
+"origin" → https://github.com/user/repo.git
+"upstream" → https://github.com/original/repo.git
+
+origin = 단순히 URL의 짧은 별명!</pre>
+                </div>
+            </section>
+
+            <section id="areas">
+                <h2>3. Git의 3가지 영역</h2>
+                <p>Git은 3개의 주요 영역으로 구성됩니다:</p>
+
+                <div class="diagram">
+                    <div class="diagram-title">Git의 3가지 영역 흐름도</div>
+                    <div class="mermaid">
+graph TB
+    WD[Working Directory<br/>작업 디렉토리<br/>실제 파일 편집]
+    SA[Staging Area<br/>스테이징 영역<br/>커밋 준비]
+    REPO[Repository<br/>.git 디렉토리<br/>영구 저장]
+
+    WD -->|git add| SA
+    SA -->|git commit| REPO
+    REPO -->|git checkout| WD
+
+    style WD fill:#e8f4f8
+    style SA fill:#fff4e6
+    style REPO fill:#e8f8e8
+                    </div>
+                </div>
+
+                <div class="callout">
+                    <div class="callout-title"><span class="emoji">✍️</span> 일상 비유: 작문 수업</div>
+                    <pre>1. 초안 작성 (Working Directory)
+   - 공책에 자유롭게 쓰기
+   - 지우개로 지우고 다시 쓰기
+
+2. 선생님께 보여줄 부분 선택 (Staging Area)
+   - 투명 필름에 제출할 부분만 복사
+   - "이 문장은 빼고, 이 문장은 넣고..."
+   - git add = 투명 필름에 복사하기
+
+3. 제출 (Repository)
+   - 선생님께 제출 후 점수 받음
+   - 제출한 작문은 변경 불가 (영구 보존)
+   - git commit = 제출하기</pre>
+                </div>
+
+                <h3>데이터 흐름</h3>
+                <pre>작업 흐름:
+
+편집 → add → commit → push
+ ↓      ↓      ↓       ↓
+WD → Stage → Repo → Remote
+
+복원 흐름:
+
+pull → checkout → 편집
+ ↓       ↓        ↓
+Remote → WD ← Repo</pre>
+            </section>
+
+            <section id="basics">
+                <h2>4. 기본 개념</h2>
+
+                <h3>4.1 커밋 (Commit)</h3>
+
+                <h4>커밋이란?</h4>
+                <p><strong>정의:</strong> 현재 작업을 저장소에 기록하는 것. 프로젝트의 "스냅샷"을 찍는 것.</p>
+
+                <div class="callout">
+                    <div class="callout-title"><span class="emoji">📸</span> 일상 비유: 사진 앨범</div>
+                    <pre>여행 사진:
+- 9월 1일 공항 (커밋 A)
+- 9월 2일 호텔 (커밋 B)
+- 9월 3일 관광지 (커밋 C)
+
+각 사진 = 그 순간의 완전한 모습
+과거 사진을 지우지 않음
+언제든 과거 사진 다시 볼 수 있음</pre>
+                </div>
+
+                <h4>스냅샷 vs 델타</h4>
+                <p><strong>Git은 전체 스냅샷을 저장합니다!</strong> (델타 아님)</p>
+
+                <div class="comparison">
+                    <div class="comparison-item">
+                        <h4><span class="cross">❌</span> 잘못된 이해 (델타)</h4>
+                        <pre>커밋 A: 전체 파일
+커밋 B: A로부터 변경사항만
+커밋 C: B로부터 변경사항만</pre>
+                    </div>
+                    <div class="comparison-item">
+                        <h4><span class="check">✅</span> 올바른 이해 (스냅샷)</h4>
+                        <pre>커밋 A: 전체 파일 상태
+커밋 B: 전체 파일 상태
+커밋 C: 전체 파일 상태
+
+→ 각 커밋은 독립적!</pre>
+                    </div>
+                </div>
+
+                <h3>4.2 체크아웃 (Checkout)</h3>
+
+                <h4>체크아웃이란?</h4>
+                <p><strong>정의:</strong> 특정 커밋을 작업 디렉토리에 불러오는 것. "타임머신" 타기.</p>
+
+                <div class="callout">
+                    <div class="callout-title"><span class="emoji">⏰</span> 일상 비유: 게임 불러오기</div>
+                    <pre>게임 저장 파일:
+- Save 1: 레벨 1 클리어
+- Save 2: 레벨 2 클리어
+- Save 3: 보스 직전
+
+git checkout = 저장 파일 불러오기
+→ 선택한 세이브 시점으로 게임 상태가 완전히 바뀜!</pre>
+                </div>
+
+                <div class="diagram">
+                    <div class="diagram-title">커밋 vs 체크아웃</div>
+                    <div class="mermaid">
+graph LR
+    WD1[작업 디렉토리<br/>현재 작업]
+    REPO1[Repository<br/>저장소]
+
+    WD1 -->|commit<br/>저장| REPO1
+    REPO1 -->|checkout<br/>불러오기| WD1
+
+    style WD1 fill:#e8f4f8
+    style REPO1 fill:#e8f8e8
+                    </div>
+                </div>
+            </section>
+
+            <section id="structure">
+                <h2>5. Git 내부 구조</h2>
+
+                <h3>5.1 .git 디렉토리 구조</h3>
+                <pre>.git/
+├── HEAD                    # 현재 위치 포인터
+├── config                  # 설정 파일
+├── index                   # Staging Area
+├── objects/                # 객체 데이터베이스
+│   ├── 10/
+│   │   └── 6287c4...      # Blob/Tree/Commit 객체
+│   └── ...
+├── refs/                   # 참조 (브랜치, 태그)
+│   ├── heads/             # 로컬 브랜치
+│   │   ├── main
+│   │   └── develop
+│   └── remotes/           # 원격 추적 브랜치
+│       └── origin/
+│           └── main
+└── logs/                  # 변경 이력 로그</pre>
+
+                <h3>5.2 HEAD 파일</h3>
+
+                <h4>단순한 텍스트 파일</h4>
+                <pre>$ cat .git/HEAD
+ref: refs/heads/main</pre>
+
+                <p><strong>HEAD는:</strong></p>
+                <ul>
+                    <li><span class="check">✅</span> 일반 텍스트 파일 (41바이트)</li>
+                    <li><span class="check">✅</span> <code>cat</code> 명령으로 볼 수 있음</li>
+                    <li><span class="cross">❌</span> 바이너리 파일 아님</li>
+                    <li><span class="cross">❌</span> 심볼릭 링크 아님</li>
+                </ul>
+
+                <h4>Symbolic Reference (심볼릭 참조)</h4>
+                <p>HEAD는 보통 <strong>브랜치를 참조</strong>합니다:</p>
+
+                <div class="diagram">
+                    <div class="diagram-title">HEAD → Branch → Commit 참조 체인</div>
+                    <div class="mermaid">
+graph LR
+    HEAD[HEAD<br/>파일]
+    BRANCH[main<br/>브랜치]
+    COMMIT[18a602e<br/>커밋]
+
+    HEAD -->|ref: refs/heads/main| BRANCH
+    BRANCH -->|18a602e...| COMMIT
+
+    style HEAD fill:#ffd700
+    style BRANCH fill:#87ceeb
+    style COMMIT fill:#90ee90
+                    </div>
+                </div>
+
+                <h4>Attached vs Detached HEAD</h4>
+
+                <div class="comparison">
+                    <div class="comparison-item">
+                        <h4><span class="check">✅</span> Attached HEAD (정상)</h4>
+                        <pre>$ cat .git/HEAD
+ref: refs/heads/main
+
+HEAD → main → 커밋 C
+(브랜치가 자동으로 이동)</pre>
+                    </div>
+                    <div class="comparison-item">
+                        <h4><span class="cross">⚠️</span> Detached HEAD (분리)</h4>
+                        <pre>$ cat .git/HEAD
+18a602e70995b8335...
+
+HEAD → 커밋 C
+(브랜치 없음!)</pre>
+                    </div>
+                </div>
+
+                <div class="callout">
+                    <div class="callout-title"><span class="emoji">⛵</span> 일상 비유: 배 타기</div>
+                    <pre>Attached HEAD = 부두에 묶인 배
+  → 안전, 잃어버리지 않음
+
+Detached HEAD = 떠있는 배
+  → 위험, 떠내려갈 수 있음</pre>
+                </div>
+            </section>
+
+            <section id="objects">
+                <h2>6. Git 객체 모델</h2>
+                <p>Git의 핵심! 모든 데이터는 3가지 객체로 저장됩니다:</p>
+
+                <div class="diagram">
+                    <div class="diagram-title">Git 객체 구조</div>
+                    <div class="mermaid">
+graph TB
+    COMMIT[Commit 객체<br/>642바이트<br/>메타데이터만]
+    TREE[Tree 객체<br/>수 KB<br/>디렉토리 구조]
+    BLOB1[Blob 객체<br/>16KB<br/>TODO.md]
+    BLOB2[Blob 객체<br/>40KB<br/>CLAUDE.md]
+    BLOB3[Blob 객체<br/>17KB<br/>README.md]
+
+    COMMIT -->|tree: 6335ae30| TREE
+    TREE -->|blob: 96398e2e| BLOB1
+    TREE -->|blob: d45974b7| BLOB2
+    TREE -->|blob: fb32e70d| BLOB3
+
+    style COMMIT fill:#ffd700
+    style TREE fill:#87ceeb
+    style BLOB1 fill:#90ee90
+    style BLOB2 fill:#90ee90
+    style BLOB3 fill:#90ee90
+                    </div>
+                </div>
+
+                <h3>6.1 Commit 객체</h3>
+                <p><strong>메타데이터만 저장</strong></p>
+                <pre>$ git cat-file -p 18a602e
+
+tree 6335ae30...
+parent 7276892...
+author dkkwon0228 &lt;email&gt; 1761835874 +0900
+committer dkkwon0228 &lt;email&gt; 1761835874 +0900
+
+docs(guide): Add claude-powerline statusline setup guide</pre>
+
+                <p><strong>포함하는 것:</strong></p>
+                <ul>
+                    <li><span class="check">✅</span> Tree 해시 (40바이트)</li>
+                    <li><span class="check">✅</span> Parent 해시 (40바이트)</li>
+                    <li><span class="check">✅</span> Author/Committer 정보</li>
+                    <li><span class="check">✅</span> 커밋 메시지</li>
+                </ul>
+
+                <p><strong>포함하지 않는 것:</strong></p>
+                <ul>
+                    <li><span class="cross">❌</span> 파일 목록</li>
+                    <li><span class="cross">❌</span> 파일 내용</li>
+                    <li><span class="cross">❌</span> 디렉토리 구조</li>
+                </ul>
+
+                <div class="callout">
+                    <div class="callout-title"><span class="emoji">🏷️</span> 일상 비유: 목차 카드</div>
+                    <pre>도서관 카드:
+- 책 제목: "Git 가이드"
+- 저자: dkkwon0228
+- 출판일: 2025-10-31
+- 서가 위치: #6335ae30 ← Tree 해시
+- 이전 판: #7276892 ← Parent 해시
+
+카드 = Commit 객체
+실제 책 내용은 서가에!</pre>
+                </div>
+
+                <h3>6.2 Tree 객체</h3>
+                <p><strong>디렉토리 구조 표현</strong></p>
+                <pre>$ git cat-file -p 6335ae30
+
+040000 tree 14146669...  .claude
+100644 blob 22909b0c...  .gitignore
+100644 blob d45974b7...  CLAUDE.md
+040000 tree b14437a9...  dashboard
+040000 tree a4a7e10c...  docs
+100644 blob 96398e2e...  TODO.md</pre>
+
+                <p><strong>형식:</strong></p>
+                <ul>
+                    <li><code>040000</code> = 디렉토리 권한</li>
+                    <li><code>100644</code> = 일반 파일 권한</li>
+                    <li><code>tree</code> = 디렉토리</li>
+                    <li><code>blob</code> = 파일</li>
+                </ul>
+
+                <div class="callout">
+                    <div class="callout-title"><span class="emoji">🗺️</span> 일상 비유: 서가 배치도</div>
+                    <pre>도서관 배치도:
+
+1층 (Root Tree):
+  - 소설 코너 → 2층 A구역 (Tree)
+  - 과학 코너 → 2층 B구역 (Tree)
+  - 잡지 #12345 (Blob)
+  - 신문 #67890 (Blob)
+
+배치도 = Tree 객체
+실제 책 = Blob 객체</pre>
+                </div>
+
+                <h3>6.3 Blob 객체</h3>
+                <p><strong>실제 파일 내용 저장</strong></p>
+
+                <p><strong>특징:</strong></p>
+                <ul>
+                    <li>파일 내용 전체를 저장</li>
+                    <li>파일명 정보 없음 (Tree가 저장)</li>
+                    <li>경로 정보 없음 (Tree가 저장)</li>
+                    <li>순수하게 내용만!</li>
+                </ul>
+
+                <div class="callout">
+                    <div class="callout-title"><span class="emoji">📖</span> 일상 비유: 실제 책</div>
+                    <pre>Blob = 책 내용 그 자체
+
+책 제목? → Tree가 알려줌
+어느 서가? → Tree가 알려줌
+누가 썼나? → Commit이 알려줌
+
+Blob은 순수하게 내용만 담음!</pre>
+                </div>
+
+                <h3>6.4 중복 제거 메커니즘</h3>
+                <pre>커밋 A:
+  Tree A
+    └─ README.md (해시: abc123)
+
+커밋 B (README.md 변경 없음):
+  Tree B (다른 Tree, 하지만...)
+    └─ README.md (해시: abc123) ← 같은 해시!
+
+objects/ab/c123 파일은 하나만 존재!
+→ 두 커밋이 같은 Blob 공유
+→ 저장 공간 절약!</pre>
+
+                <div class="callout">
+                    <div class="callout-title"><span class="emoji">🔧</span> 일상 비유: 공용 부품</div>
+                    <pre>자동차 A:
+  - 엔진 #12345
+  - 타이어 #67890
+
+자동차 B:
+  - 엔진 #12345 ← 같은 부품!
+  - 타이어 #11111
+
+엔진 #12345는 한 개만 생산!
+두 차가 공유 사용!</pre>
+                </div>
+            </section>
+
+            <section id="branches">
+                <h2>7. 브랜치 시스템</h2>
+
+                <h3>7.1 브랜치란?</h3>
+                <p><strong>정의:</strong> 커밋을 가리키는 41바이트 텍스트 파일. 가벼운 포인터.</p>
+
+                <div class="callout">
+                    <div class="callout-title"><span class="emoji">📌</span> 일상 비유: 포스트잇</div>
+                    <pre>책 (커밋 히스토리):
+1장 ← 2장 ← 3장 ← 4장
+              ↑      ↑
+           노란색  분홍색
+           (dev)  (main)
+
+포스트잇 = 브랜치
+- 같은 페이지에 여러 개 붙이기 가능
+- 옮기기 쉬움
+- 가벼움 (종이 한 장)
+- 책을 복사하지 않음!</pre>
+                </div>
+
+                <h4>브랜치 파일 내용</h4>
+                <pre>$ cat .git/refs/heads/main
+18a602e70995b83350378b863cfe557fa5141fdc
+
+$ ls -lh .git/refs/heads/main
+41바이트
+
+# 단 41바이트!
+# - SHA-1 해시: 40자
+# - 줄바꿈: 1자</pre>
+
+                <h3>7.2 브랜치 생성 = 파일 하나 생성</h3>
+                <pre>$ git branch feature
+
+# 내부 동작:
+echo "18a602e..." > .git/refs/heads/feature
+
+# 끝!</pre>
+
+                <div class="diagram">
+                    <div class="diagram-title">브랜치 생성 과정</div>
+                    <div class="mermaid">
+graph LR
+    A[Commit A]
+    B[Commit B]
+    C[Commit C]
+
+    A --> B --> C
+
+    MAIN[main<br/>41바이트]
+    FEATURE[feature<br/>41바이트]
+
+    MAIN -.->|18a602e| C
+    FEATURE -.->|18a602e| C
+
+    style C fill:#90ee90
+    style MAIN fill:#87ceeb
+    style FEATURE fill:#ffd700
+                    </div>
+                </div>
+
+                <p><strong>중요:</strong> 커밋을 복사하지 않음! 단지 같은 커밋을 가리키는 포인터!</p>
+
+                <div class="callout">
+                    <div class="callout-title"><span class="emoji">🔖</span> 일상 비유: 책갈피 추가</div>
+                    <pre>책의 4장에:
+- 노란 책갈피 (main)
+- 분홍 책갈피 (feature)
+
+책을 복사하지 않음!
+단지 책갈피 하나 더 끼움!</pre>
+                </div>
+
+                <h3>7.3 분기 발생</h3>
+                <pre>$ git checkout feature
+$ git commit -m "New feature"
+→ 커밋 D 생성</pre>
+
+                <div class="diagram">
+                    <div class="diagram-title">브랜치 분기</div>
+                    <div class="mermaid">
+graph LR
+    A[Commit A]
+    B[Commit B]
+    C[Commit C]
+    D[Commit D<br/>feature]
+
+    A --> B --> C
+    C --> D
+
+    MAIN[main]
+    FEATURE[feature]
+
+    MAIN -.-> C
+    FEATURE -.-> D
+
+    style C fill:#90ee90
+    style D fill:#ffd700
+                    </div>
+                </div>
+            </section>
+
+            <section id="unidirectional">
+                <h2>8. 단방향 참조 구조</h2>
+
+                <h3>8.1 자식은 부모를 알지만, 부모는 자식을 모름</h3>
+
+                <div class="diagram">
+                    <div class="diagram-title">Git의 단방향 참조</div>
+                    <div class="mermaid">
+graph RL
+    C[Commit C<br/>"내 부모는 B"]
+    B[Commit B<br/>"내 부모는 A"]
+    A[Commit A<br/>"부모 없음"]
+
+    C -->|parent| B
+    B -->|parent| A
+
+    C -.->|"자식?"| X1[❓]
+    B -.->|"자식?"| X2[❓]
+
+    style C fill:#90ee90
+    style B fill:#87ceeb
+    style A fill:#ffd700
+                    </div>
+                </div>
+
+                <div class="callout">
+                    <div class="callout-title"><span class="emoji">✉️</span> 일상 비유: 편지 체인</div>
+                    <pre>할아버지 편지 (1950년):
+  "친애하는 후손에게..."
+  부모: (없음, 첫 편지)
+
+아버지 편지 (1980년):
+  "할아버지 편지(1950)를 읽고..."
+  부모: 할아버지 편지
+
+나의 편지 (2025년):
+  "아버지 편지(1980)를 읽고..."
+  부모: 아버지 편지
+
+각 편지는:
+- 자기 부모 편지는 언급 ✅
+- 미래 편지는 예측 불가 ❌
+- 과거는 변경 불가 ✅</pre>
+                </div>
+
+                <h3>8.2 왜 이렇게 설계되었나?</h3>
+
+                <h4>1. 불변성 (Immutability)</h4>
+                <div class="comparison">
+                    <div class="comparison-item">
+                        <h4><span class="cross">❌</span> 자식 목록 방식</h4>
+                        <pre>커밋 B (자식 목록: C)
+
+새 커밋 D 생성:
+→ B를 수정해야 함
+→ B의 해시 변경!
+→ 전체 체인 재계산
+
+과거가 계속 변경됨!</pre>
+                    </div>
+                    <div class="comparison-item">
+                        <h4><span class="check">✅</span> 현재 설계</h4>
+                        <pre>커밋 D 생성:
+→ D만 작성
+→ B는 변경 없음
+
+과거는 절대 변경 안 됨!</pre>
+                    </div>
+                </div>
+
+                <div class="callout">
+                    <div class="callout-title"><span class="emoji">📦</span> 일상 비유: 타임캡슐</div>
+                    <pre>잘못된 설계 = 타임캡슐을 계속 열어서 내용 수정
+  → "미래에 이런 일이 있었어요" 추가
+  → 타임캡슐의 의미 없음
+
+올바른 설계 = 타임캡슐은 한 번 묻으면 영원히 불변
+  → 과거는 과거 그대로 보존</pre>
+                </div>
+
+                <h4>2. 분산 시스템의 효율성</h4>
+                <pre>시나리오:
+당신: 커밋 B에서 커밋 C 생성
+동료: 커밋 B에서 커밋 D 생성
+
+현재 설계:
+- C: parent = B
+- D: parent = B
+- B는 변경 없음
+✅ 완벽하게 병합 가능!</pre>
+            </section>
+
+            <section id="snapshots">
+                <h2>9. 스냅샷 저장 방식</h2>
+
+                <h3>9.1 전체 스냅샷 vs 델타</h3>
+                <p><strong>Git은 전체 스냅샷을 저장합니다!</strong></p>
+
+                <div class="comparison">
+                    <div class="comparison-item">
+                        <h4>델타 방식 (SVN 등)</h4>
+                        <pre>커밋 A: 전체 파일
+커밋 B: A로부터 변경사항
+커밋 C: B로부터 변경사항
+
+복원 시 모든 변경사항 재생</pre>
+                    </div>
+                    <div class="comparison-item">
+                        <h4>Git 방식</h4>
+                        <pre>커밋 A: 전체 파일 상태
+커밋 B: 전체 파일 상태
+커밋 C: 전체 파일 상태
+
+각 커밋이 독립적!</pre>
+                    </div>
+                </div>
+
+                <div class="callout">
+                    <div class="callout-title"><span class="emoji">📸</span> 일상 비유: 사진 앨범</div>
+                    <pre>델타 방식:
+- 첫 사진: 전체 모습
+- 두 번째: "안경 추가"
+- 세 번째: "머리 염색"
+→ 복원하려면 모든 변경사항 재생 필요
+
+스냅샷 방식:
+- 첫 사진: 전체 모습 A
+- 두 번째: 전체 모습 B
+- 세 번째: 전체 모습 C
+→ 각 사진이 독립적, 바로 볼 수 있음</pre>
+                </div>
+
+                <h3>9.2 중복 제거로 효율성 확보</h3>
+                <pre>프로젝트: 577개 파일
+
+커밋 A: 577개 파일 전체 저장
+  → 10MB
+
+커밋 B: 2개 파일만 변경
+  → 새로 저장: 2개 파일 (50KB)
+  → 재사용: 575개 파일 (0바이트!)
+
+총 증가: 50KB만!</pre>
+
+                <div class="callout">
+                    <div class="callout-title"><span class="emoji">🧱</span> 일상 비유: 레고 블록</div>
+                    <pre>스냅샷 방식 = "전체 모델을 매번 조립"
+  → 하지만 같은 블록은 재사용!
+  → 변경된 블록만 새로 추가
+
+레고 창고 (objects/):
+- 빨간 블록 #123 (한 개만 존재)
+- 파란 블록 #456 (한 개만 존재)
+
+모델 A: 빨간 #123 + 파란 #456
+모델 B: 빨간 #123 + 초록 #789
+→ 빨간 블록 재사용! 초록만 추가!</pre>
+                </div>
+            </section>
+
+            <section id="remote">
+                <h2>10. 원격 저장소</h2>
+
+                <h3>10.1 origin의 정의</h3>
+                <p><strong>정의:</strong> 원격 저장소의 기본 별칭. URL의 짧은 이름.</p>
+
+                <pre>$ git remote -v
+origin  https://github.com/user/repo.git (fetch)
+origin  https://github.com/user/repo.git (push)</pre>
+
+                <h3>10.2 fetch vs pull</h3>
+
+                <div class="comparison">
+                    <div class="comparison-item">
+                        <h4><span class="check">✅</span> fetch (안전)</h4>
+                        <pre>$ git fetch origin
+
+동작:
+1. 커밋 다운로드
+2. origin/main 업데이트
+3. 로컬 main 변경 안 됨!
+4. 작업 디렉토리 변경 안 됨!
+
+→ 안전! 확인만</pre>
+                    </div>
+                    <div class="comparison-item">
+                        <h4><span class="cross">⚠️</span> pull (주의)</h4>
+                        <pre>$ git pull origin main
+
+동작:
+1. fetch 수행
+2. 자동 병합!
+3. 작업 디렉토리 변경됨!
+
+→ 위험! 충돌 가능</pre>
+                    </div>
+                </div>
+
+                <div class="callout">
+                    <div class="callout-title"><span class="emoji">📚</span> 일상 비유: 도서관</div>
+                    <pre>fetch = 책 빌려오기 (아직 안 읽음)
+- 책을 집에 가져옴
+- 책장에 꽂아둠
+- 현재 읽던 책은 그대로
+→ 안전!
+
+pull = 책 빌려와서 바로 읽기
+- 책을 가져옴
+- 즉시 읽기 시작
+- 현재 내용과 섞임
+→ 주의!</pre>
+                </div>
+
+                <h3>10.3 "브랜치가 origin/main보다 2개 커밋 앞섬"</h3>
+
+                <div class="diagram">
+                    <div class="diagram-title">로컬과 원격의 차이</div>
+                    <div class="mermaid">
+graph LR
+    A[A]
+    B[B]
+    C[C]
+    D[D]
+    E[E]
+
+    A --> B --> C --> D --> E
+
+    ORIGIN[origin/main<br/>원격]
+    LOCAL[main<br/>로컬]
+
+    ORIGIN -.-> C
+    LOCAL -.-> E
+
+    style C fill:#87ceeb
+    style E fill:#90ee90
+                    </div>
+                </div>
+
+                <p>→ D, E는 아직 push 안 함!</p>
+            </section>
+
+            <section id="hash">
+                <h2>11. 해시와 저장 메커니즘</h2>
+
+                <h3>11.1 SHA-1 해시</h3>
+                <p><strong>정의:</strong> Git이 사용하는 해시 함수. 40자리 16진수.</p>
+
+                <pre>SHA-1("Hello Git!")
+= 106287c47fd25ad9a0874670a0d5c6eacf1bfe4e</pre>
+
+                <div class="callout">
+                    <div class="callout-title"><span class="emoji">👆</span> 일상 비유: 지문</div>
+                    <pre>사람마다 고유한 지문
+
+Git:
+파일마다 고유한 해시
+
+- 같은 내용 = 같은 지문
+- 다른 내용 = 다른 지문
+- 지문만으로 사람 식별
+- 해시만으로 파일 식별</pre>
+                </div>
+
+                <h3>11.2 "해시만 저장" vs "내용을 해시로 이름 붙여 저장"</h3>
+
+                <div class="comparison">
+                    <div class="comparison-item">
+                        <h4><span class="cross">❌</span> 잘못된 이해</h4>
+                        <pre>해시만 저장:
+
+.git/objects/에
+해시 목록만 저장
+
+파일 내용은?
+→ 복원 불가능!</pre>
+                    </div>
+                    <div class="comparison-item">
+                        <h4><span class="check">✅</span> 올바른 이해</h4>
+                        <pre>내용을 저장:
+
+.git/objects/10/6287c4...
+내용: "Hello Git!"
+
+해시 = 파일명
+내용 = 파일 안에 저장!</pre>
+                    </div>
+                </div>
+
+                <div class="callout">
+                    <div class="callout-title"><span class="emoji">📚</span> 일상 비유: 도서관 보관</div>
+                    <pre>잘못된 이해:
+서가에 책 번호만 적힌 카드
+실제 책은 없음
+→ 읽을 수 없음!
+
+올바른 이해:
+서가에 책이 있음
+책 등에 번호표 부착
+→ 번호로 찾아서 읽을 수 있음!</pre>
+                </div>
+            </section>
+
+            <section id="examples">
+                <h2>12. 실전 예시</h2>
+
+                <h3>12.1 파일 추가부터 커밋까지</h3>
+                <pre># 1. 새 파일 생성
+$ echo "# My Project" > README.md
+
+# 2. 상태 확인
+$ git status
+Untracked files:
+  README.md
+
+# 3. Staging Area에 추가
+$ git add README.md
+
+# 4. 커밋
+$ git commit -m "Add README"
+
+# 5. 로그 확인
+$ git log --oneline
+abc1234 Add README</pre>
+
+                <h3>12.2 브랜치 생성과 분기</h3>
+                <pre># 1. 브랜치 생성
+$ git branch feature
+
+# 2. 브랜치 전환
+$ git checkout feature
+
+# 3. feature에서 작업
+$ echo "Feature" > feature.txt
+$ git add feature.txt
+$ git commit -m "Add feature"
+
+# 4. 구조 확인
+$ git log --oneline --all --graph
+* def5678 (HEAD -> feature) Add feature
+* abc1234 (main) Add README</pre>
+            </section>
+
+            <section id="tips">
+                <h2>13. 고급 팁</h2>
+
+                <h3>13.1 git cat-file로 객체 탐색</h3>
+                <pre># 객체 타입 확인
+$ git cat-file -t 18a602e
+commit
+
+# 객체 크기 확인
+$ git cat-file -s 18a602e
+642
+
+# 객체 내용 출력
+$ git cat-file -p 18a602e
+tree ...
+parent ...</pre>
+
+                <h3>13.2 상대 참조 (HEAD~, HEAD^)</h3>
+                <pre># HEAD의 부모
+$ git show HEAD^
+$ git show HEAD~1
+
+# HEAD의 조부모
+$ git show HEAD^^
+$ git show HEAD~2
+
+# HEAD의 3세대 이전
+$ git show HEAD~3</pre>
+
+                <h3>13.3 명령어 치트시트</h3>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>명령어</th>
+                            <th>설명</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>git init</code></td>
+                            <td>새 저장소 생성</td>
+                        </tr>
+                        <tr>
+                            <td><code>git clone &lt;url&gt;</code></td>
+                            <td>원격 저장소 복제</td>
+                        </tr>
+                        <tr>
+                            <td><code>git status</code></td>
+                            <td>상태 확인</td>
+                        </tr>
+                        <tr>
+                            <td><code>git add &lt;file&gt;</code></td>
+                            <td>Staging Area에 추가</td>
+                        </tr>
+                        <tr>
+                            <td><code>git commit -m "msg"</code></td>
+                            <td>커밋</td>
+                        </tr>
+                        <tr>
+                            <td><code>git log --oneline --graph</code></td>
+                            <td>히스토리 그래프</td>
+                        </tr>
+                        <tr>
+                            <td><code>git branch &lt;name&gt;</code></td>
+                            <td>브랜치 생성</td>
+                        </tr>
+                        <tr>
+                            <td><code>git checkout &lt;name&gt;</code></td>
+                            <td>브랜치 전환</td>
+                        </tr>
+                        <tr>
+                            <td><code>git fetch origin</code></td>
+                            <td>다운로드만</td>
+                        </tr>
+                        <tr>
+                            <td><code>git pull origin main</code></td>
+                            <td>다운로드 + 병합</td>
+                        </tr>
+                        <tr>
+                            <td><code>git push origin main</code></td>
+                            <td>업로드</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <section id="myths">
+                <h2>14. 자주 하는 오해들</h2>
+
+                <div class="callout">
+                    <div class="callout-title"><span class="cross">❌</span> 오해 1: "브랜치 생성 = 커밋 복사"</div>
+                    <p><strong>진실:</strong> 브랜치 = 41바이트 텍스트 파일. 커밋 복사 없음! 단지 같은 커밋을 가리키는 포인터!</p>
+                </div>
+
+                <div class="callout">
+                    <div class="callout-title"><span class="cross">❌</span> 오해 2: "HEAD = 최신 커밋"</div>
+                    <p><strong>진실:</strong> HEAD = 현재 체크아웃된 커밋. 과거로 체크아웃하면 HEAD도 과거 커밋을 가리킴!</p>
+                </div>
+
+                <div class="callout">
+                    <div class="callout-title"><span class="cross">❌</span> 오해 3: "fetch가 원격을 변경"</div>
+                    <p><strong>진실:</strong> fetch = 읽기 전용! 원격 저장소는 전혀 변경되지 않음. 로컬의 origin/main만 업데이트!</p>
+                </div>
+
+                <div class="callout">
+                    <div class="callout-title"><span class="cross">❌</span> 오해 4: "해시만 저장"</div>
+                    <p><strong>진실:</strong> Git은 파일 내용 전체를 저장! 해시는 파일명으로 사용. 내용이 저장되어 있기 때문에 복원 가능!</p>
+                </div>
+            </section>
+
+            <section>
+                <h2>마치며</h2>
+                <p>Git은 단순한 버전 관리 도구가 아니라, 정교하게 설계된 분산 시스템입니다. 내부 동작 원리를 이해하면:</p>
+                <ul>
+                    <li><strong>문제 해결:</strong> 오류 발생 시 스스로 해결 가능</li>
+                    <li><strong>효율적 사용:</strong> Git의 강력한 기능 100% 활용</li>
+                    <li><strong>협업 능력:</strong> 복잡한 브랜치 전략 이해 및 적용</li>
+                    <li><strong>자신감:</strong> 두려움 없이 Git 사용</li>
+                </ul>
+
+                <p>이 가이드가 Git의 마법 같은 기능들을 이해하는 데 도움이 되기를 바랍니다!</p>
+
+                <hr style="margin: 3rem 0; border: none; border-top: 1px solid var(--border);">
+
+                <p style="text-align: center; color: var(--text-secondary); font-size: 0.9rem;">
+                    작성일: 2025-10-31 | 버전: v1.0 | 라이선스: MIT
+                </p>
+            </section>
+            </article>
+        </main>
+    </div>
+
+    <script>
+        // Initialize Mermaid
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'default',
+            flowchart: {
+                useMaxWidth: true,
+                htmlLabels: true,
+                curve: 'basis'
+            }
+        });
+
+        // Active TOC link on scroll
+        const sections = document.querySelectorAll('section[id]');
+        const tocLinks = document.querySelectorAll('.toc a');
+
+        window.addEventListener('scroll', () => {
+            let current = '';
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                if (scrollY >= sectionTop - 100) {
+                    current = section.getAttribute('id');
+                }
+            });
+
+            tocLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === `#${current}`) {
+                    link.classList.add('active');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
